@@ -1,7 +1,4 @@
-require 'rubygems'
 require 'thread'
-require 'pry'
-require 'pry-stack_explorer'
 
 module RaiseAwareness
 
@@ -40,10 +37,8 @@ module RaiseAwareness
       l.call(e, binding)
     end
   end
-end
 
-if defined? Rubinius
-  module RaiseAwareness
+  if defined? Rubinius
     def self.start
       class << Rubinius
         alias raise_with_no_awareness raise_exception
@@ -65,13 +60,10 @@ if defined? Rubinius
         alias raise_exception raise_with_no_awareness
       end
     end
-  end
-elsif defined?(JRuby)
-  $CLASSPATH << File.expand_path('../../ext/', __FILE__)
-  java_import org.pryrepl.RaiseAwarenessEventHook
+  elsif defined?(JRuby)
+    $CLASSPATH << File.expand_path('../../ext/', __FILE__)
+    java_import org.pryrepl.RaiseAwarenessEventHook
 
-  module RaiseAwareness
-    private
     def self.start
       JRuby.runtime.add_event_hook(hook)
     end
@@ -85,46 +77,8 @@ elsif defined?(JRuby)
         self.rescue(e, b)
       end)
     end
+
+  else
+    require File.expand_path('../../ext/raise_awareness.so', __FILE__)
   end
-
-else
-  require File.expand_path('../../ext/raise_awareness.so', __FILE__)
-end
-
-def pryly(&block)
-  raised = []
-
-  RaiseAwareness.listen(block) do |exception, binding|
-    raised << [exception, binding.callers]
-  end
-
-ensure
-  if raised.last
-    e, bindings = raised.last
-    $foo = e
-    $bar = raised
-    bindings.first.eval("_ex_ = $foo")
-    bindings.first.eval("_raised_ = $bar")
-    bindings = bindings.drop_while { |b| b.eval("self") == RaiseAwareness || b.eval("__method__") == :pryly }
-    pry :call_stack => bindings
-  end
-end
-
-pryly do
-
-  def a
-    begin
-      begin
-        raise "foo"
-
-      rescue => e
-        raise "bar"
-      end
-
-    rescue => e
-      1 / 0
-
-    end
-  end
-  a
 end
