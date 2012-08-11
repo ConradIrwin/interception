@@ -61,6 +61,7 @@ module Interception
       end
     end
   elsif defined?(JRuby)
+    require 'java'
     $CLASSPATH << File.expand_path('../../ext/', __FILE__)
     java_import org.pryrepl.InterceptionEventHook
 
