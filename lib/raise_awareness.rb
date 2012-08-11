@@ -1,78 +1,129 @@
+require 'rubygems'
+require 'thread'
 require 'pry'
-if defined? Rubinius
-  class << Rubinius
 
+module RaiseAwareness
 
-    alias raise_with_no_awareness raise_exception
+  class << self
+    attr_accessor :mutex, :listeners
+  end
 
-    def raise_exception(exc)
-      bt = Rubinius::VM.backtrace(1, true).drop_while do |x|
-        x.variables.method.file.to_s.start_with?("kernel/")
-      end.first
-      b = Binding.setup(bt.variables, bt.variables.method, bt.constant_scope, bt.variables.self, bt)
+  self.mutex = Mutex.new
+  self.listeners = []
 
-      RaiseAwareness.rescue(exc, b)
-      raise_with_no_awareness(exc)
-    end
+  def self.listen(for_block=nil, &listen_block)
 
-    def binding_of_caller(n)
-      bt = Rubinius::VM.backtrace(1 + n, true).first
+    puts "FOOO"
+    raise "no block given" unless listen_block || for_block
+    listeners << listen_block || for_block
+    start
 
-        b = Binding.setup(
-                      bt.variables,
-                      bt.variables.method,
-                      bt.constant_scope,
-                      bt.variables.self,
-                      bt
-                      )
-
-        b.instance_variable_set(:@frame_description, bt.describe)
-
-        b
+    if listen_block && for_block
+      begin
+        for_block.call
+      ensure
+        unlisten listen_block
+      end
     end
   end
-else
-  require './ext/raise_awareness.so'
-end
-module RaiseAwareness
-  def self.listeners; @listeners ||= []; end
+
+  def self.unlisten(listen_block)
+    listeners.delete listen_block
+    stop if listeners.empty?
+  end
 
   def self.rescue(e, binding)
     listeners.each do |l|
       l.call(e, binding)
     end
   end
+end
 
-  def self.wrap
-    raises = []
-    listeners << proc{ |e, b| raises << [e, b] }
-    yield
-  ensure
-    listeners.pop
-    e, b = *raises.last
-    if b
-      $foo = e
-      $bar = raises
-      b.eval("_ex_ = $foo")
-      b.eval("_raises_ = $bar")
-      b.pry
+if defined? Rubinius
+  module RaiseAwareness
+    def self.start
+      class << Rubinius
+        alias raise_with_no_awareness raise_exception
+
+        def raise_exception(exc)
+          bt = Rubinius::VM.backtrace(1, true).drop_while do |x|
+            x.variables.method.file.to_s.start_with?("kernel/")
+          end.first
+          b = Binding.setup(bt.variables, bt.variables.method, bt.constant_scope, bt.variables.self, bt)
+
+          RaiseAwareness.rescue(exc, b)
+          raise_with_no_awareness(exc)
+        end
+      end
     end
+
+    def self.stop
+      alias raise_exception raise_with_no_awareness
+    end
+  end
+elsif defined?(JRuby)
+  puts "HIHIIH"
+  $CLASSPATH << './org/pryrepl'
+  java_import org.pryrepl.RaiseAwarenessEventHook
+
+  module RaiseAwareness
+    private
+    def self.start
+      puts "START"
+      JRuby.runtime.add_event_hook(hook)
+    end
+
+    def self.stop
+      JRuby.runtime.remove_event_hook(hook)
+    end
+
+    def self.hook
+      @hook ||= RaiseAwarenessEventHook.new(proc do |e, b|
+        self.rescue(e, b)
+      end)
+    end
+  end
+
+else
+  require './ext/raise_awareness.so'
+end
+
+def pryly(&block)
+  raised = []
+
+  puts "listening"
+  RaiseAwareness.listen(block) do |exception, binding|
+    raised << [exception, binding]
+  end
+
+ensure
+  if raised.last
+    e, b = *raised.last
+    $foo = e
+    $bar = raised
+    b.eval("_ex_ = $foo")
+    b.eval("_raised_ = $bar")
+    b.pry
   end
 end
 
-RaiseAwareness.wrap do
-  begin
+pryly do
+
+  def a
     begin
-      raise "foo"
+      begin
+        raise "foo"
+
+      rescue => e
+        raise "bar"
+      end
 
     rescue => e
-      raise "bar"
+      1 / 0
+
     end
-
-  rescue => e
-    "woo".wibble
-
   end
+  a
 end
 __END__
 
