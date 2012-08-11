@@ -61,7 +61,7 @@ class << Interception
 
   else #MRI
 
-    require File.expand_path('../../ext/interception.so', __FILE__)
+    require File.expand_path('../../ext/interception', __FILE__)
 
   end
 end
