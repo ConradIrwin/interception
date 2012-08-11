@@ -63,7 +63,7 @@ module Interception
     raise ArgumentError, "no block given" unless listen_block || for_block
     mutex.synchronize{
       start if listeners.empty?
-      listeners << listen_block || for_block
+      listeners << (listen_block || for_block)
     }
 
     if listen_block && for_block

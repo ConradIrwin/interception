@@ -1,3 +1,9 @@
+Interception.listen(proc {
+  begin; raise "fooo"; rescue; end
+}) do |e, b|
+  $initial_eb = [e,b]
+end
+
 describe Interception do
 
   before do
@@ -67,7 +73,7 @@ describe Interception do
     e1, e2 = nil
     block = proc{
       begin
-        raise "foo"
+        line = __LINE__; raise "foo"
       rescue => e1
         #
       end
@@ -112,7 +118,7 @@ describe Interception do
       #
     end
 
-    @exceptions.map{ |e, b| [e] + b.eval('[__LINE__, shoulder]') }.should == [[e1, line, :bucket]]
+    @exceptions.map{ |e, b| [e] + b.eval('[__LINE__, shoulder, self]') }.should == [[e1, line, :bucket, self]]
     e1.message.should =~ /desnrok/
   end
 
@@ -125,7 +131,11 @@ describe Interception do
       #
     end
 
-    @exceptions.map{ |e, b| [e] + b.eval('[__LINE__, shoulder]') }.should == [[e1, line, :bucket]]
+    @exceptions.map{ |e, b| [e] + b.eval('[__LINE__, shoulder, self]') }.should == [[e1, line, :bucket, self]]
     ZeroDivisionError.should === e1
+  end
+
+  it "should have the right exception and binding at the top level" do
+    $initial_eb.last.eval("self").should == TOPLEVEL_BINDING.eval("self")
   end
 end

@@ -1,6 +1,11 @@
 
+task :clean do
+  sh 'rm -f ext/*.o ext/*.so ext/*.dylib'
+  sh 'rm -f ext/org/pryrepl/*.class'
+end
+
 desc "Compile *.c files"
-task :compile do
+task :compile => [:clean] do
   cd 'ext/' do
     sh 'ruby extconf.rb'
     sh 'make'

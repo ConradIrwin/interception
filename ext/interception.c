@@ -2,12 +2,26 @@
 
 static VALUE rb_mInterception;
 
+extern struct FRAME {
+    VALUE self;
+    int argc;
+    ID last_func;
+    ID orig_func;
+    VALUE last_class;
+    struct FRAME *prev;
+    struct FRAME *tmp;
+    struct RNode *node;
+    int iter;
+    int flags;
+    unsigned long uniq;
+} *ruby_frame;
+
 #ifdef RUBY_19
 
 void
 interception_hook(rb_event_flag_t evflag, VALUE data, VALUE self, ID mid, VALUE klass)
 {
-    VALUE binding = rb_funcall(rb_mKernel, rb_intern("binding"), 0, NULL);
+    VALUE binding = rb_funcall(self, rb_intern("binding"), 0, NULL);
     rb_funcall(rb_mInterception, rb_intern("rescue"), 2, rb_errinfo(), binding);
 }
 
@@ -24,7 +38,12 @@ interception_start(VALUE self)
 void
 interception_hook(rb_event_t event, NODE *node, VALUE self, ID mid, VALUE klass)
 {
-    VALUE binding = rb_funcall(rb_mKernel, rb_intern("binding"), 0, NULL);
+    VALUE bself = ruby_frame->prev->self;
+    if (node == ruby_frame->node) {
+        bself = ruby_frame->prev->prev->self;
+    }
+
+    VALUE binding = rb_funcall(bself, rb_intern("binding"), 0, NULL);
     rb_funcall(rb_mInterception, rb_intern("rescue"), 2, ruby_errinfo, binding);
 }
 
