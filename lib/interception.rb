@@ -19,7 +19,8 @@ module Interception
   # occurring.
   #
   # NOTE: Be careful when writing a listener, if your listener raises an
-  #       exception it will mask the original exception.
+  # exception it will mask the original exception (though it will not recursively
+  # call your listener).
   #
   # @example
   #
@@ -56,9 +57,8 @@ module Interception
   #                               takes two arguments, the exception and the
   #                               binding
   # @return [Object]              The return value of the for_block (if present)
-  # @yield [Exception]
-  # @yield [Binding]
-  # @see {unlisten}
+  # @yield [exception, binding]
+  # @see .unlisten
   def self.listen(for_block=nil, &listen_block)
     raise ArgumentError, "no block given" unless listen_block || for_block
     mutex.synchronize{
@@ -80,6 +80,7 @@ module Interception
   # Disable a previously added listener
   #
   # @param [Proc] listen_block  The listen block you wish to remove.
+  # @see .listen
   def self.unlisten(listen_block)
     mutex.synchronize{
       listeners.delete listen_block
@@ -95,24 +96,24 @@ module Interception
   # For efficiency, this block will never be called unless there are active
   # listeners.
   #
-  # @param [Exception] e  The exception that was raised
+  # @param [Exception] exception  The exception that was raised
   # @param [Binding] binding  The binding from which it was raised
-  def self.rescue(e, binding)
+  def self.rescue(exception, binding)
     return if rescueing
     self.rescueing = true
     listeners.each do |l|
-      l.call(e, binding)
+      l.call(exception, binding)
     end
   ensure
     self.rescueing = false
   end
 
   # Start sending events to rescue.
-  # @see cross_platform.rb
+  # Implemented per-platform
   def self.start; raise NotImplementedError end
 
   # Stop sending events to rescue.
-  # @see cross_platform.rb
+  # Implemented per-platform
   def self.stop; raise NotImplementedError end
 
   require File.expand_path('../cross_platform.rb', __FILE__)
