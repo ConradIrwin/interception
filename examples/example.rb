@@ -1,21 +1,16 @@
-$:.unshift File.expand_path '../../lib', __FILE__
-require 'pryception'
+require 'interception'
+listener = lambda{ |exception, binding|
+  puts "raised: #{exception.inspect}"
+}
 
-Interception.prycept do
+Interception.listen(listener)
 
-  def a
-    begin
-      begin
-        raise "foo"
-
-      rescue => e
-        raise "bar"
-      end
-
-    rescue => e
-      1 / 0
-
-    end
-  end
-  a
+begin
+  raise "oopsy"
+rescue => exception
+  puts "rescued: #{exception.inspect}"
 end
+
+raise "daisy"
+
+Interception.unlisten(listener)

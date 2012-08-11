@@ -1,20 +1,17 @@
-$:.unshift File.expand_path '../../lib', __FILE__
-require 'pryception'
-
-def alpha
-  x = 1
-  beta
+require 'interception'
+def log_exceptions(&block)
+  Interception.listen(block) do |exception, binding|
+    puts "raised: #{exception.inspect} from #{binding.eval("__method__")}"
+  end
 end
 
-def beta
-  y = 30
-  gamma(1, 2)
+def hello
+  raise "oopsy"
+rescue => exception
+  puts "rescued: #{exception.inspect} in #{__method__}"
+  raise "daisy"
 end
 
-def gamma(x)
-  greeting = x
-end
-
-Interception.prycept do
-  alpha
+log_exceptions do
+  hello
 end
