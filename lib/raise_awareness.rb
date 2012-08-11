@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'thread'
 require 'pry'
+require 'pry-stack_explorer'
 
 module RaiseAwareness
 
@@ -93,17 +94,18 @@ def pryly(&block)
 
   puts "listening"
   RaiseAwareness.listen(block) do |exception, binding|
-    raised << [exception, binding]
+    raised << [exception, binding.callers]
   end
 
 ensure
   if raised.last
-    e, b = *raised.last
+    e, bindings = raised.last
     $foo = e
     $bar = raised
-    b.eval("_ex_ = $foo")
-    b.eval("_raised_ = $bar")
-    b.pry
+    bindings.first.eval("_ex_ = $foo")
+    bindings.first.eval("_raised_ = $bar")
+    bindings = bindings.drop_while { |b| b.eval("self") == RaiseAwareness || b.eval("__method__") == :pryly }
+    pry :call_stack => bindings
   end
 end
 
@@ -124,86 +126,4 @@ pryly do
     end
   end
   a
-end
-__END__
-
-require 'inline'
-require 'pry'
-
-class RaiseAwareness
-  def initialize
-    @bindings = []
-  end
-
-  def process(binding)
-    @bindings << binding
-  end
-
-  def self.start(&block)
-    $foo = new
-    $foo.start(&block)
-  end
-
-  def start
-    add_event_hook
-    yield
-  ensure
-    remove_event_hook
-    @bindings.last.pry
-  end
-
-  inline(:C) do |builder|
-    builder.add_type_converter("rb_event_t", '', '')
-    builder.add_type_converter("ID", '', '')
-    builder.add_type_converter("NODE *", '', '')
-
-    builder.include '<time.h>'
-    builder.include '"ruby.h"'
-
-    builder.prefix <<-'EOF'
-      static VALUE event_hook_klass = Qnil;
-      static ID method = 0;
-      static int in_event_hook = 0;
-      static VALUE argv[1];
-    EOF
-
-    builder.c_raw <<-'EOF'
-    static void
-    event_hook(rb_event_flag_t evflag, VALUE data, VALUE self, ID mid, VALUE klass) {
-
-      printf("Hmm: %d %d %d\n", evflag, RUBY_EVENT_RAISE, evflag == RUBY_EVENT_RAISE);
-
-      if (evflag == RUBY_EVENT_RAISE) {
-        argv[0] = rb_funcall(self, rb_intern("binding"), 0, NULL);
-
-        printf("Calling...: %p\n", data);
-
-        rb_funcall2(data, rb_intern("process"), 1, argv);
-      }
-    }
-    EOF
-
-    builder.c <<-'EOF'
-      void add_event_hook() {
-        rb_add_event_hook(event_hook, RUBY_EVENT_RAISE, self);
-      }
-    EOF
-
-    builder.c <<-'EOF'
-      void remove_event_hook() {
-        rb_remove_event_hook(event_hook);
-        event_hook_klass = Qnil;
-      }
-    EOF
-  end
-end
-
-RaiseAwareness.start do
-
-  begin
-    raise "foo"
-  rescue => e
-    raise e
-  end
-
 end
