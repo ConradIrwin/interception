@@ -48,5 +48,5 @@ Init_interception()
 {
     rb_mInterception = rb_define_module("Interception");
     rb_define_singleton_method(rb_mInterception, "start", interception_start, 0);
-    rb_define_singleton_method(rb_mInterception, "stop", interception_start, 0);
+    rb_define_singleton_method(rb_mInterception, "stop", interception_stop, 0);
 }

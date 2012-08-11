@@ -3,7 +3,7 @@ require 'thread'
 module Interception
 
   class << self
-    attr_accessor :mutex, :listeners
+    attr_accessor :mutex, :listeners, :rescueing
   end
 
   self.mutex = Mutex.new
@@ -12,8 +12,8 @@ module Interception
   def self.listen(for_block=nil, &listen_block)
     raise "no block given" unless listen_block || for_block
     mutex.synchronize{
+      start if listeners.empty?
       listeners << listen_block || for_block
-      start
     }
 
     if listen_block && for_block
@@ -33,9 +33,13 @@ module Interception
   end
 
   def self.rescue(e, binding)
+    return if rescueing
+    self.rescueing = true
     listeners.each do |l|
       l.call(e, binding)
     end
+  ensure
+    self.rescueing = false
   end
 
   if defined? Rubinius
@@ -66,7 +70,11 @@ module Interception
     java_import org.pryrepl.InterceptionEventHook
 
     def self.start
+      old_verbose = $VERBOSE
+      $VERBOSE = nil
       JRuby.runtime.add_event_hook(hook)
+    ensure
+      $VERBOSE  = old_verbose
     end
 
     def self.stop
