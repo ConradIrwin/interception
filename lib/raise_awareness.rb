@@ -67,7 +67,7 @@ if defined? Rubinius
     end
   end
 elsif defined?(JRuby)
-  $CLASSPATH << './org/pryrepl'
+  $CLASSPATH << File.expand_path('../../ext/', __FILE__)
   java_import org.pryrepl.RaiseAwarenessEventHook
 
   module RaiseAwareness
@@ -88,7 +88,7 @@ elsif defined?(JRuby)
   end
 
 else
-  require './ext/raise_awareness.so'
+  require File.expand_path('../../ext/raise_awareness.so', __FILE__)
 end
 
 def pryly(&block)

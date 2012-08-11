@@ -1,0 +1,6 @@
+.rbx
+ext/Makefile
+*.class
+*.o
+*.so
+*.gem
