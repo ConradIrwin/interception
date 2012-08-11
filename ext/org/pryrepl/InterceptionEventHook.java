@@ -8,11 +8,11 @@ import org.jruby.RubyException;
 import org.jruby.RubyBinding;
 import org.jruby.RubyProc;
 
-public class RaiseAwarenessEventHook extends EventHook {
+public class InterceptionEventHook extends EventHook {
 
     private RubyProc proc;
 
-    public RaiseAwarenessEventHook(RubyProc proc) {
+    public InterceptionEventHook(RubyProc proc) {
         super();
         this.proc = proc;
     }

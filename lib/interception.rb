@@ -1,6 +1,6 @@
 require 'thread'
 
-module RaiseAwareness
+module Interception
 
   class << self
     attr_accessor :mutex, :listeners
@@ -41,7 +41,7 @@ module RaiseAwareness
   if defined? Rubinius
     def self.start
       class << Rubinius
-        alias raise_with_no_awareness raise_exception
+        alias raise_with_no_interception raise_exception
 
         def raise_exception(exc)
           bt = Rubinius::VM.backtrace(1, true).drop_while do |x|
@@ -49,20 +49,20 @@ module RaiseAwareness
           end.first
           b = Binding.setup(bt.variables, bt.variables.method, bt.constant_scope, bt.variables.self, bt)
 
-          RaiseAwareness.rescue(exc, b)
-          raise_with_no_awareness(exc)
+          Interception.rescue(exc, b)
+          raise_with_no_interception(exc)
         end
       end
     end
 
     def self.stop
       class << Rubinius
-        alias raise_exception raise_with_no_awareness
+        alias raise_exception raise_with_no_interception
       end
     end
   elsif defined?(JRuby)
     $CLASSPATH << File.expand_path('../../ext/', __FILE__)
-    java_import org.pryrepl.RaiseAwarenessEventHook
+    java_import org.pryrepl.InterceptionEventHook
 
     def self.start
       JRuby.runtime.add_event_hook(hook)
@@ -73,12 +73,12 @@ module RaiseAwareness
     end
 
     def self.hook
-      @hook ||= RaiseAwarenessEventHook.new(proc do |e, b|
+      @hook ||= InterceptionEventHook.new(proc do |e, b|
         self.rescue(e, b)
       end)
     end
 
   else
-    require File.expand_path('../../ext/raise_awareness.so', __FILE__)
+    require File.expand_path('../../ext/interception.so', __FILE__)
   end
 end
