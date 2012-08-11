@@ -13,11 +13,11 @@ module RaiseAwareness
   self.listeners = []
 
   def self.listen(for_block=nil, &listen_block)
-
-    puts "FOOO"
     raise "no block given" unless listen_block || for_block
-    listeners << listen_block || for_block
-    start
+    mutex.synchronize{
+      listeners << listen_block || for_block
+      start
+    }
 
     if listen_block && for_block
       begin
@@ -29,8 +29,10 @@ module RaiseAwareness
   end
 
   def self.unlisten(listen_block)
-    listeners.delete listen_block
-    stop if listeners.empty?
+    mutex.synchronize{
+      listeners.delete listen_block
+      stop if listeners.empty?
+    }
   end
 
   def self.rescue(e, binding)
@@ -59,18 +61,18 @@ if defined? Rubinius
     end
 
     def self.stop
-      alias raise_exception raise_with_no_awareness
+      class << Rubinius
+        alias raise_exception raise_with_no_awareness
+      end
     end
   end
 elsif defined?(JRuby)
-  puts "HIHIIH"
   $CLASSPATH << './org/pryrepl'
   java_import org.pryrepl.RaiseAwarenessEventHook
 
   module RaiseAwareness
     private
     def self.start
-      puts "START"
       JRuby.runtime.add_event_hook(hook)
     end
 
@@ -92,7 +94,6 @@ end
 def pryly(&block)
   raised = []
 
-  puts "listening"
   RaiseAwareness.listen(block) do |exception, binding|
     raised << [exception, binding.callers]
   end
