@@ -4,3 +4,4 @@ ext/Makefile
 *.o
 *.so
 *.gem
+*.lock
