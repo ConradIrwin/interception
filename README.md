@@ -76,7 +76,7 @@ Known bugs
 * On rubinius we don't catch some low-level exceptions (like `ZeroDivisionError`).
 * On jruby, the binding sometimes has the wrong value for `self` (in `NoMethodError`s).
 * On MRI-1.8.7, the binding sometimes has the wrong value for `self`.
-There are no known bugs on MRI-1.9.3
+* No known bugs on MRI-1.9.3
 
 Meta-fu
 =======
