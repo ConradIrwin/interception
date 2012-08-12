@@ -13,12 +13,11 @@ public class InterceptionEventHook extends EventHook {
     private RubyProc proc;
 
     public InterceptionEventHook(RubyProc proc) {
-        super();
         this.proc = proc;
     }
 
     public boolean isInterestedInEvent(RubyEvent event) {
-        return event.getName().equals(RubyEvent.RAISE.getName());
+        return event == RubyEvent.RAISE;
     }
 
     public void eventHandler(ThreadContext context, String eventName, String file, int line, String name, IRubyObject type) {
