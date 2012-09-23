@@ -10,7 +10,7 @@ if RbConfig::CONFIG['ruby_install_name'] == 'jruby'
 elsif RbConfig::CONFIG['ruby_install_name'] =~ /^ruby/
 
   require 'mkmf'
-  $CFLAGS += " -DRUBY_19" if  RUBY_VERSION =~ /^1.9/
+  $CFLAGS += " -DRUBY_18" if  RUBY_VERSION =~ /^(1.8)/
   extension_name = "interception"
   dir_config(extension_name)
   create_makefile(extension_name)

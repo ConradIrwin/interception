@@ -16,22 +16,7 @@ extern struct FRAME {
     unsigned long uniq;
 } *ruby_frame;
 
-#ifdef RUBY_19
-
-void
-interception_hook(rb_event_flag_t evflag, VALUE data, VALUE self, ID mid, VALUE klass)
-{
-    VALUE binding = rb_funcall(self, rb_intern("binding"), 0, NULL);
-    rb_funcall(rb_mInterception, rb_intern("rescue"), 2, rb_errinfo(), binding);
-}
-
-VALUE
-interception_start(VALUE self)
-{
-    rb_add_event_hook(interception_hook, RUBY_EVENT_RAISE, rb_mInterception);
-}
-
-#else
+#ifdef RUBY_18
 
 #include "node.h"
 
@@ -51,6 +36,23 @@ VALUE
 interception_start(VALUE self)
 {
     rb_add_event_hook(interception_hook, RUBY_EVENT_RAISE);
+    return Qnil;
+}
+
+#else
+
+void
+interception_hook(rb_event_flag_t evflag, VALUE data, VALUE self, ID mid, VALUE klass)
+{
+    VALUE binding = rb_funcall(self, rb_intern("binding"), 0, NULL);
+    rb_funcall(rb_mInterception, rb_intern("rescue"), 2, rb_errinfo(), binding);
+}
+
+VALUE
+interception_start(VALUE self)
+{
+    rb_add_event_hook(interception_hook, RUBY_EVENT_RAISE, rb_mInterception);
+    return Qnil;
 }
 
 #endif
