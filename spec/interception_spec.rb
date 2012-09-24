@@ -138,4 +138,19 @@ describe Interception do
   it "should have the right exception and binding at the top level" do
     $initial_eb.last.eval("self").should == TOPLEVEL_BINDING.eval("self")
   end
+
+  if defined? BasicObject
+    it "should catch exceptions on basic objects" do
+
+      line = __LINE__ + 1
+      foo = Class.new(BasicObject){ def oops; shoulder = :bracket; foops; end }.new
+      begin
+        foo.oops
+      rescue => e1
+        #
+      end
+
+      @exceptions.map{ |e, b| [e] + b.eval('[self, shoulder, __LINE__]') }.should  == [[e1, foo, :bracket, line]]
+    end
+  end
 end

@@ -44,7 +44,7 @@ interception_start(VALUE self)
 void
 interception_hook(rb_event_flag_t evflag, VALUE data, VALUE self, ID mid, VALUE klass)
 {
-    VALUE binding = rb_funcall(self, rb_intern("binding"), 0, NULL);
+    VALUE binding = rb_funcall(rb_mKernel, rb_intern("binding"), 0, NULL);
     rb_funcall(rb_mInterception, rb_intern("rescue"), 2, rb_errinfo(), binding);
 }
 

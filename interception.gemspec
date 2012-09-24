@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = "interception"
-  s.version = "0.2"
+  s.version = "0.3"
   s.author = "Conrad Irwin"
   s.email = "conrad.irwin@gmail.com"
   s.homepage = "http://github.com/ConradIrwin/interception"
