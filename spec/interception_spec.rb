@@ -135,6 +135,19 @@ describe Interception do
     ZeroDivisionError.should === e1
   end
 
+  it "should be able to handle SystemStackErrors" do
+    shoulder = :bucket
+
+    begin
+      line = __LINE__; def twist; twist; end; twist
+    rescue Exception => e1
+      #
+    end
+
+    @exceptions.map{ |e, b| [e] + b.eval('[__LINE__, shoulder, self]') }.should == [[e1, line, :bucket, self]]
+    SystemStackError.should === e1
+  end
+
   it "should have the right exception and binding at the top level" do
     $initial_eb.last.eval("self").should == TOPLEVEL_BINDING.eval("self")
   end
