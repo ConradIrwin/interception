@@ -2,7 +2,7 @@
 
 static VALUE rb_mInterception;
 
-extern struct FRAME {
+struct FRAME {
     VALUE self;
     int argc;
     ID last_func;
