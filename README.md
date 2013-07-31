@@ -14,7 +14,7 @@ gem install interception
 Or, if you're using bundler:
 
 ```ruby
-source :rubygems
+source 'https://rubygems.org'
 gem 'interception'
 ```
 
