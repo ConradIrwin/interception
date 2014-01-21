@@ -39,7 +39,23 @@ interception_start(VALUE self)
     return Qnil;
 }
 
-#else
+
+VALUE
+interception_stop(VALUE self)
+{
+    rb_remove_event_hook(interception_hook);
+    return Qnil;
+}
+
+void
+Init_interception()
+{
+    rb_mInterception = rb_define_module("Interception");
+    rb_define_singleton_method(rb_mInterception, "start", interception_start, 0);
+    rb_define_singleton_method(rb_mInterception, "stop", interception_stop, 0);
+}
+
+#elif RUBY_19 || RUBY_20
 
 void
 interception_hook(rb_event_flag_t evflag, VALUE data, VALUE self, ID mid, VALUE klass)
@@ -55,19 +71,21 @@ interception_start(VALUE self)
     return Qnil;
 }
 
-#endif
-
 VALUE
 interception_stop(VALUE self)
 {
     rb_remove_event_hook(interception_hook);
     return Qnil;
 }
+#endif
 
 void
 Init_interception()
 {
     rb_mInterception = rb_define_module("Interception");
+
+#if defined(RUBY_18) || defined(RUBY_19) || defined(RUBY_20)
     rb_define_singleton_method(rb_mInterception, "start", interception_start, 0);
     rb_define_singleton_method(rb_mInterception, "stop", interception_stop, 0);
+#endif
 }
