@@ -39,7 +39,6 @@ interception_start(VALUE self)
     return Qnil;
 }
 
-
 VALUE
 interception_stop(VALUE self)
 {
