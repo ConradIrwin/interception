@@ -47,14 +47,6 @@ interception_stop(VALUE self)
     return Qnil;
 }
 
-void
-Init_interception()
-{
-    rb_mInterception = rb_define_module("Interception");
-    rb_define_singleton_method(rb_mInterception, "start", interception_start, 0);
-    rb_define_singleton_method(rb_mInterception, "stop", interception_stop, 0);
-}
-
 #elif RUBY_19 || RUBY_20
 
 void
