@@ -134,7 +134,7 @@ module Interception
   end
 
   def self.ruby_21?
-    RUBY_VERSION == '2.1.0' && RUBY_ENGINE == 'ruby'
+    RUBY_VERSION =~ /^2\.1\./ && RUBY_ENGINE == 'ruby'
   end
 
   require File.expand_path('../cross_platform.rb', __FILE__)
