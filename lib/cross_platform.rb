@@ -59,9 +59,26 @@ class << Interception
       end)
     end
 
-  else #MRI
+  # For MRI
+  # @note For Ruby 2.1 and later we use the new TracePoint API.
+  elsif RUBY_VERSION.to_f >= 2.1 && RUBY_ENGINE == 'ruby'
 
-    require File.expand_path('../../ext/interception', __FILE__) unless Interception.ruby_21?
+    def start
+      @tracepoint ||= TracePoint.new(:raise) do |tp|
+        self.rescue(tp.raised_exception, tp.binding)
+      end
+
+      @tracepoint.enable
+    end
+
+    def stop
+      @tracepoint.disable
+    end
+
+  # For old MRI
+  else
+
+    require File.expand_path('../../ext/interception', __FILE__)
 
   end
 end

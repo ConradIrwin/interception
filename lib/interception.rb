@@ -108,34 +108,5 @@ module Interception
     self.rescueing = false
   end
 
-  # Start sending events to rescue.
-  # Implemented per-platform
-  # @note For Ruby 2.1 we use the new TracePoint API.
-  def self.start
-    if ruby_21?
-      @tracepoint ||= TracePoint.new(:raise) do |tp|
-        self.rescue(tp.raised_exception, tp.binding)
-      end
-
-      @tracepoint.enable
-    else
-      raise NotImplementedError
-    end
-  end
-
-  # Stop sending events to rescue.
-  # Implemented per-platform
-  def self.stop
-    if ruby_21?
-      @tracepoint.disable
-    else
-      raise NotImplementedError
-    end
-  end
-
-  def self.ruby_21?
-    RUBY_VERSION.to_f == 2.1 && RUBY_ENGINE == 'ruby'
-  end
-
   require File.expand_path('../cross_platform.rb', __FILE__)
 end
