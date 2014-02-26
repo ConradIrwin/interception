@@ -61,7 +61,7 @@ class << Interception
 
   else #MRI
 
-    require File.expand_path('../../ext/interception', __FILE__)
+    require File.expand_path('../../ext/interception', __FILE__) unless Interception.ruby_21?
 
   end
 end
