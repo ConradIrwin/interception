@@ -1,4 +1,5 @@
 require 'thread'
+require 'binding_of_caller'
 
 
 # Provides global facility for monitoring exceptions raised in your application.
