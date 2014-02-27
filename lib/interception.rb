@@ -108,5 +108,13 @@ module Interception
     self.rescueing = false
   end
 
+  # Start sending events to rescue.
+  # Implemented per-platform
+  def self.start; raise NotImplementedError end
+
+  # Stop sending events to rescue.
+  # Implemented per-platform
+  def self.stop; raise NotImplementedError end
+
   require File.expand_path('../cross_platform.rb', __FILE__)
 end
