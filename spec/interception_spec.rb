@@ -76,7 +76,7 @@ describe Interception do
       #
     end
 
-    @exceptions.map{ |e, b| b.eval('__FILE__'); b.eval('__LINE__') }.should == [line]
+    @exceptions.map{ |e, b| b.eval('__LINE__') }.should == [line]
     @exceptions.map{ |e, b| line_from_stack_string(e.backtrace[0]) }.should == [line]
   end
 
