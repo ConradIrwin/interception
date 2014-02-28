@@ -46,7 +46,7 @@ interception_stop(VALUE self)
     return Qnil;
 }
 
-#elif RUBY_19 || RUBY_20
+#elif RUBY_19
 
 void
 interception_hook(rb_event_flag_t evflag, VALUE data, VALUE self, ID mid, VALUE klass)
@@ -75,8 +75,6 @@ Init_interception()
 {
     rb_mInterception = rb_define_module("Interception");
 
-#if defined(RUBY_18) || defined(RUBY_19) || defined(RUBY_20)
     rb_define_singleton_method(rb_mInterception, "start", interception_start, 0);
     rb_define_singleton_method(rb_mInterception, "stop", interception_stop, 0);
-#endif
 }
