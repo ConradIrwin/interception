@@ -7,4 +7,4 @@ Interception changelog
 
 ### v0.3 and lower
 
-* We wasn't writing changelogs before, sorry.
+* We weren't writing changelogs before, sorry.
