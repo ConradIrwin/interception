@@ -60,8 +60,8 @@ class << Interception
     end
 
   # For MRI
-  # @note For Ruby 2.1 and later we use the new TracePoint API.
-  elsif RUBY_VERSION.to_f >= 2.1 && RUBY_ENGINE == 'ruby'
+  # @note For Ruby 2.0 and later we use the new TracePoint API.
+  elsif RUBY_VERSION.to_f >= 2.0 && RUBY_ENGINE == 'ruby'
 
     def start
       @tracepoint ||= TracePoint.new(:raise) do |tp|
