@@ -75,7 +75,7 @@ Known bugs
 
 * On rubinius we don't catch some low-level exceptions (like `ZeroDivisionError`).
 * On MRI-1.8.7, the binding sometimes has the wrong value for `self`.
-* The Interception versions prior to `0.4` **do not** support MRI-2.1.0. `0.4` does support it.
+* The Interception versions prior to `0.4` **do not** support MRI-2.1.0. `>= 0.4` does support it.
 
 Meta-fu
 =======
