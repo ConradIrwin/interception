@@ -123,16 +123,20 @@ describe Interception do
   end
 
   it "should be able to handle division by 0 errors" do
-    shoulder = :bucket
+    pending "RBX doesn't yet support this",
+      :if => defined?(RUBY_ENGINE) && RUBY_ENGINE == 'rbx' do
 
-    begin
-      line = __LINE__; 1 / 0
-    rescue => e1
-      #
+      shoulder = :bucket
+
+      begin
+        line = __LINE__; 1 / 0
+      rescue => e1
+        #
+      end
+
+      @exceptions.map{ |e, b| [e] + b.eval('[__LINE__, shoulder, self]') }.should == [[e1, line, :bucket, self]]
+      ZeroDivisionError.should === e1
     end
-
-    @exceptions.map{ |e, b| [e] + b.eval('[__LINE__, shoulder, self]') }.should == [[e1, line, :bucket, self]]
-    ZeroDivisionError.should === e1
   end
 
   it "should have the right exception and binding at the top level" do
