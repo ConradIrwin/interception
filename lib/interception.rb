@@ -1,9 +1,9 @@
 require 'thread'
+require 'binding_of_caller'
 
 
 # Provides global facility for monitoring exceptions raised in your application.
 module Interception
-
   class << self
     attr_accessor :mutex, :listeners, :rescueing
   end
@@ -98,11 +98,37 @@ module Interception
   #
   # @param [Exception] exception  The exception that was raised
   # @param [Binding] binding  The binding from which it was raised
-  def self.rescue(exception, binding)
+  def self.rescue(exception, _binding)
     return if rescueing
     self.rescueing = true
+
+    # Classes can override the #raise method
+    # here, we want to make sure we return the first binding that doesn't
+    # have the call #raise in it.
+    # This isn't completely fail-safe but the way to fool it is innocuous.
+    # Here's how:
+    # 1. Make a subclass of BasicObject that has a #raise method.
+    # 2. In that #raise method, call #raise on an instance whose class includes Kernel
+    #
+    # In that case, we'd report the stack frame just above BasicObject#raise.
+    # That's pretty rare and arguably useful.
+    # In all other cases, you are including Kernel and the top-level #raise
+    # call on the stack is an override
+    callers = _binding.callers.drop(1)
+    i = 0
+    while i < callers.length do
+      # we have to wrap this in rescue because we might be calling methods on BasicObject
+      m = callers[i].eval('begin ; __method__ ; rescue ; end')
+      break unless m.to_s == 'raise'
+      i = i + 1
+    end
+    if i != callers.length
+      _binding = callers[i]
+      exception.set_backtrace(exception.backtrace.drop(i))
+    end
+
     listeners.each do |l|
-      l.call(exception, binding)
+      l.call(exception, _binding)
     end
   ensure
     self.rescueing = false
