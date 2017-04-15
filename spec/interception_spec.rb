@@ -4,6 +4,11 @@ Interception.listen(proc {
   $initial_eb = [e,b]
 end
 
+# returns the line given a string from Exception#backtrace
+def line_from_stack_string(s)
+  s.match(/[^:]+:(\d+)/)[1].to_i
+end
+
 describe Interception do
 
   before do
@@ -51,6 +56,27 @@ describe Interception do
     end
 
     @exceptions.map{ |e, b| b.eval('__LINE__') }.should == [line]
+    @exceptions.map{ |e, b| line_from_stack_string(e.backtrace[0]) }.should == [line]
+  end
+
+
+  it "should catch the binding on the correct line even when Kernel#raise is overridden" do
+      $stderr.puts "----------------------------------------"
+    class RaiseTest1 < String
+      def raise(*args, &block)
+        super
+      end
+    end
+    tester = RaiseTest1.new
+    line = nil
+    begin
+      line = __LINE__; tester.raise "foo"
+    rescue => e
+      #
+    end
+
+    @exceptions.map{ |e, b| $stderr.puts b.eval('__FILE__'); b.eval('__LINE__') }.should == [line]
+    @exceptions.map{ |e, b| line_from_stack_string(e.backtrace[0]) }.should == [line]
   end
 
   it "should catch all nested exceptions" do
